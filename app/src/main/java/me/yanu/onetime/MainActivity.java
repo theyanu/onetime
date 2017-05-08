@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
+import com.h6ah4i.android.media.IBasicMediaPlayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +33,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener, MediaPlayer.OnCompletionListener, IAsyncResponse {
+public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener, IBasicMediaPlayer.OnCompletionListener, IAsyncResponse {
     public static int INTERNET_PERMISSION = 0;
     private static final int UI_ANIMATION_DELAY = 300;
 
@@ -40,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     @BindView(R.id.songTitle) TextView mSongTitle;
     @BindView(R.id.songCover) ImageView mSongCover;
     @BindView(R.id.innerLayout) RelativeLayout mContentView;
-    @BindView(R.id.play_indicator) TextView mPlayIndicator;
     @BindView(R.id.mainLayout) RelativeLayout mMainLayout;
     @BindView(R.id.animation_view) LottieAnimationView mAnimationView;
 
@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         mAudioService = new AudioService(this);
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, INTERNET_PERMISSION);
 
-
         //Fanciness
         mAnimationView.setAnimation("data.json");
         mAnimationView.loop(true);
@@ -150,27 +149,16 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
             String result = predictions.get(0).name;
 
             if ("play".equalsIgnoreCase(result) && !mIsPlaying) {
-                Toast.makeText(this, "WAIT FOR IT...", Toast.LENGTH_LONG).show();
-                streamSong();
+                Toast.makeText(this, "WAIT FOR IT...", Toast.LENGTH_SHORT).show();
+                mAudioService.requestSong();
             } else if ("stop".equalsIgnoreCase(result) && mIsPlaying) {
                 Toast.makeText(this, "FORVER GONE", Toast.LENGTH_LONG).show();
                 mIsPlaying = false;
-                mPlayIndicator.setText(R.string.play);
                 mAudioService.stopStream();
                 clearSongInfo();
                 mAnimationView.setVisibility(View.VISIBLE);
             }
         }
-    }
-
-
-    private void streamSong() {
-        mAudioService.requestSong();
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        streamSong();
     }
 
     private void setSongInfo() {
@@ -204,10 +192,8 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         JSONObject res = null;
         try {
             json = new JSONObject(output);
-
             JSONObject tracks = (JSONObject) json.get("tracks");
             JSONArray items = (JSONArray) tracks.get("items");
-
             res = (JSONObject) items.get(0);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -215,17 +201,21 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
         mAudioService.streamSong(res);
         currSong = res;
-
         mIsPlaying = currSong != null;
         if (!mIsPlaying) {
             Toast.makeText(this, "SHIT, SOMETHING WENT WRONG. RETRYING", Toast.LENGTH_LONG).show();
-            streamSong();
+            mAudioService.requestSong();
         } else {
-            mPlayIndicator.setText(R.string.stop);
             Toast.makeText(this, "PLAYING FANCY TUNE", Toast.LENGTH_LONG).show();
             setSongInfo();
             mAnimationView.setVisibility(View.GONE);
         }
 
+    }
+
+    @Override
+    public void onCompletion(IBasicMediaPlayer mp) {
+        if (!mp.isPlaying())
+            mAudioService.requestSong();
     }
 }

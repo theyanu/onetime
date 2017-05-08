@@ -24,21 +24,9 @@ import java.util.concurrent.ExecutionException;
 
 public class ConnectionService {
 
-    public JSONObject getSpotifySong(MainActivity context) {
-            JSONObject res = null;
+    public void getSpotifySong(MainActivity context) {
             String url = getRandomSpotifyUrl();
-
-        try {
-            JSONObject json = new JSONObject(new JsonTask(context).execute(url).get());
-
-            JSONObject tracks = (JSONObject) json.get("tracks");
-            JSONArray items = (JSONArray) tracks.get("items");
-
-            res = (JSONObject) items.get(0);
-        } catch (InterruptedException | ExecutionException | JSONException e) {
-            e.printStackTrace();
-        }
-        return res;
+            new JsonTask(context).execute(url);
     }
 
     public String getRandomSpotifyUrl() {

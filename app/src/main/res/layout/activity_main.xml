@@ -29,23 +29,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-
-            <!-- The primary full-screen view. This can be replaced with whatever view
-                 is needed to present your content, e.g. VideoView, SurfaceView,
-                 TextureView, etc. -->
-            <TextView
-                android:id="@+id/play_indicator"
-                android:layout_width="0dp"
-                android:layout_height="535dp"
-                android:gravity="center"
-                android:keepScreenOn="true"
-                android:text="@string/play"
-                android:textColor="#fff"
-                android:textSize="50sp"
-                android:textStyle="bold"
-                tools:layout_editor_absoluteX="8dp"
-                tools:layout_editor_absoluteY="8dp" />
-
             <LinearLayout
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
@@ -57,7 +40,8 @@
                     android:id="@+id/songCover"
                     android:layout_width="200dp"
                     android:layout_height="200dp"
-                    android:layout_marginBottom="@dimen/spacer" />
+                    android:layout_marginBottom="@dimen/spacer"
+                    android:contentDescription="@string/songTitle" />
 
                 <TextView
                     android:id="@+id/artist"
