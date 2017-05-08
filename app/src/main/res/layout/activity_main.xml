@@ -1,0 +1,86 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/transition_bg"
+    tools:context="me.yanu.onetime.MainActivity">
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view"
+        android:layout_width="200dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_height="200dp" />
+
+
+    <android.gesture.GestureOverlayView
+        android:id="@+id/gestureOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gestureColor="@color/colorAccent"
+        android:uncertainGestureColor="@color/colorAccentSecondary"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp">
+
+
+        <RelativeLayout
+            android:id="@+id/innerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <!-- The primary full-screen view. This can be replaced with whatever view
+                 is needed to present your content, e.g. VideoView, SurfaceView,
+                 TextureView, etc. -->
+            <TextView
+                android:id="@+id/play_indicator"
+                android:layout_width="0dp"
+                android:layout_height="535dp"
+                android:gravity="center"
+                android:keepScreenOn="true"
+                android:text="@string/play"
+                android:textColor="#fff"
+                android:textSize="50sp"
+                android:textStyle="bold"
+                tools:layout_editor_absoluteX="8dp"
+                tools:layout_editor_absoluteY="8dp" />
+
+            <LinearLayout
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/songCover"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_marginBottom="@dimen/spacer" />
+
+                <TextView
+                    android:id="@+id/artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/artist" />
+
+                <TextView
+                    android:id="@+id/songTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/songTitle"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/font_big"/>
+
+            </LinearLayout>
+
+
+        </RelativeLayout>
+
+        <!-- This FrameLayout insets its children based on system windows using
+             android:fitsSystemWindows. -->
+
+    </android.gesture.GestureOverlayView>
+
+</RelativeLayout>

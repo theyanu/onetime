@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">onetime</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="play">►</string>
+    <string name="stop">◼</string>
+    <string name="artist">Artist</string>
+    <string name="songTitle">Songtitle</string>
+</resources>
