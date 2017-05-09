@@ -6,4 +6,5 @@
     <string name="stop">◼</string>
     <string name="artist">Artist</string>
     <string name="songTitle">Songtitle</string>
+    <string name="author">jazzy | by Yannick Pulver</string>
 </resources>
