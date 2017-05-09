@@ -7,6 +7,8 @@ import android.gesture.GestureLibraries;
 import android.gesture.GestureLibrary;
 import android.gesture.GestureOverlayView;
 import android.gesture.Prediction;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -22,18 +24,18 @@ import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
-import com.h6ah4i.android.media.IBasicMediaPlayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener, IBasicMediaPlayer.OnCompletionListener, IAsyncResponse {
+public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener, MediaPlayer.OnCompletionListener, IAsyncResponse {
     public static int INTERNET_PERMISSION = 0;
     private static final int UI_ANIMATION_DELAY = 300;
 
@@ -43,6 +45,19 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     @BindView(R.id.innerLayout) RelativeLayout mContentView;
     @BindView(R.id.mainLayout) RelativeLayout mMainLayout;
     @BindView(R.id.animation_view) LottieAnimationView mAnimationView;
+
+    private int prevRed;
+    private int prevGreen;
+    private int prevBlue;
+    private int currRed;
+    private int currGreen;
+    private int currBlue;
+
+    private boolean currUp;
+    private boolean prevUp;
+
+    Handler mHandler = new Handler();
+    int mDelay = 60;
 
 
     private GestureLibrary mLibrary;
@@ -77,11 +92,10 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
             hide();
         }
     };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,8 +118,8 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         gestures.addOnGesturePerformedListener(this);
 
         //Background Transition
-        TransitionDrawable trans = (TransitionDrawable) mMainLayout.getBackground();
-        trans.startTransition(20000);
+        //TransitionDrawable trans = (TransitionDrawable) mMainLayout.getBackground();
+        //trans.startTransition(20000);
 
         //Spotify - AudioService
         mAudioService = new AudioService(this);
@@ -115,6 +129,25 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         mAnimationView.setAnimation("data.json");
         mAnimationView.loop(true);
         mAnimationView.playAnimation();
+
+        //Sample Colors to start
+        currRed = 245;
+        currGreen = 228;
+        currBlue = 94;
+
+        prevRed = 230;
+        prevGreen = 124;
+        prevBlue = 178;
+
+
+        mHandler.postDelayed(new Runnable(){
+            public void run(){
+                //do something
+                changeGradient();
+                mHandler.postDelayed(this, mDelay);
+            }
+        }, mDelay);
+
     }
 
     @Override
@@ -159,6 +192,11 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
                 mAnimationView.setVisibility(View.VISIBLE);
             }
         }
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        mAudioService.requestSong();
     }
 
     private void setSongInfo() {
@@ -213,9 +251,26 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
     }
 
-    @Override
-    public void onCompletion(IBasicMediaPlayer mp) {
-        if (!mp.isPlaying())
-            mAudioService.requestSong();
+    public void changeGradient() {
+        GradientDrawable gd = new GradientDrawable();
+
+        gd.setOrientation(GradientDrawable.Orientation.TL_BR);
+        gd.setShape(GradientDrawable.RECTANGLE);
+
+        prevBlue = prevUp ? prevBlue+1 : prevBlue-1;
+        if ((prevBlue < 100 && !prevUp) || (prevBlue > 200 && prevUp)) {
+            prevUp = !prevUp;
+        }
+
+        currBlue = currUp ? currBlue+1 : currBlue-1;
+        if ((currBlue < 100 && !currUp) || (currBlue > 200 && currUp)) {
+            currUp = !currUp;
+        }
+
+        gd.setColors(new int[]{
+                Color.argb(255, prevRed, prevGreen, prevBlue), Color.argb(255, currRed, currGreen, currBlue)
+        });
+
+        mMainLayout.setBackground(gd);
     }
 }

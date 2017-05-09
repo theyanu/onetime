@@ -13,7 +13,6 @@
         android:layout_centerVertical="true"
         android:layout_height="200dp" />
 
-
     <android.gesture.GestureOverlayView
         android:id="@+id/gestureOverlay"
         android:layout_width="match_parent"
@@ -22,7 +21,6 @@
         android:uncertainGestureColor="@color/colorAccentSecondary"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp">
-
 
         <RelativeLayout
             android:id="@+id/innerLayout"
@@ -58,13 +56,6 @@
                     android:textSize="@dimen/font_big"/>
 
             </LinearLayout>
-
-
         </RelativeLayout>
-
-        <!-- This FrameLayout insets its children based on system windows using
-             android:fitsSystemWindows. -->
-
     </android.gesture.GestureOverlayView>
-
 </RelativeLayout>

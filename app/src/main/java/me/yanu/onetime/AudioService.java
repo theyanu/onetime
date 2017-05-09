@@ -5,10 +5,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 
-import com.h6ah4i.android.media.IBasicMediaPlayer;
-import com.h6ah4i.android.media.IMediaPlayerFactory;
-import com.h6ah4i.android.media.opensl.OpenSLMediaPlayerFactory;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,11 +15,9 @@ import java.io.IOException;
  */
 
 public class AudioService {
-    //MediaPlayer mPlayer;
+    MediaPlayer mPlayer;
     MainActivity mContext;
     ConnectionService mConnectionService;
-    IMediaPlayerFactory mFactory;
-    IBasicMediaPlayer mPlayer;
 
     public AudioService(MainActivity context) {
         mContext = context;
@@ -45,9 +39,7 @@ public class AudioService {
     }
 
     public boolean streamSong(String url) {
-        mFactory = new OpenSLMediaPlayerFactory(mContext);
-        mPlayer = mFactory.createMediaPlayer();
-
+        mPlayer = new MediaPlayer();
         mPlayer.setOnCompletionListener(mContext);
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
