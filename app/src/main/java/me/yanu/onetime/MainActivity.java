@@ -48,78 +48,36 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     private static final int UI_ANIMATION_DELAY = 300;
     private static final int CAPTURE_SIZE = 256;
 
-    @BindView(R.id.artist) TextView mArtist;
-    @BindView(R.id.songTitle) TextView mSongTitle;
-    @BindView(R.id.songCover) ImageView mSongCover;
-    @BindView(R.id.innerLayout) RelativeLayout mContentView;
-    @BindView(R.id.mainLayout) RelativeLayout mMainLayout;
-    @BindView(R.id.animation_view) LottieAnimationView mAnimationView;
-    @BindView(R.id.waveform_view) WaveformView mWaveformView;
+    //Binding View properies with Butterknife
+    @BindView(R.id.artist)
+    TextView mArtist;
+    @BindView(R.id.songTitle)
+    TextView mSongTitle;
+    @BindView(R.id.songCover)
+    ImageView mSongCover;
+    @BindView(R.id.innerLayout)
+    RelativeLayout mContentView;
+    @BindView(R.id.mainLayout)
+    RelativeLayout mMainLayout;
+    @BindView(R.id.animation_view)
+    LottieAnimationView mAnimationView;
+    @BindView(R.id.waveform_view)
+    WaveformView mWaveformView;
 
     private MediaPlayer mPlayer;
     private ConnectionService mConnectionService;
 
-    private int prevRed = 230;
-    private int prevGreen = 124;
-    private int prevBlue = 178;
-
-    private int currRed = 245;
-    private int currGreen = 228;
-    private int currBlue = 94;
-
-    private boolean currUp;
-    private boolean prevUp;
+    private int prevRed = 230, prevGreen = 124, prevBlue = 178;
+    private int currRed = 245, currGreen = 228, currBlue = 94;
+    private boolean currUp, prevUp;
 
     Handler mHandler = new Handler();
     int mDelay = 60;
 
-    ViewPropertyAnimation.Animator animationText = new ViewPropertyAnimation.Animator() {
-        @Override
-        public void animate(View view) {
-            view.setAlpha( 0f );
-
-            ObjectAnimator fadeAnim = ObjectAnimator.ofFloat( view, "alpha", 0f, 1f );
-            AnimatorSet animSetXY = new AnimatorSet();
-            animSetXY.playTogether(fadeAnim);
-            animSetXY.setDuration( 1500 );
-            animSetXY.start();
-        }
-    };
-
-    ViewPropertyAnimation.Animator animationObject = new ViewPropertyAnimation.Animator() {
-        @Override
-        public void animate(View view) {
-            view.setAlpha( 0f );
-
-            ObjectAnimator animX = ObjectAnimator.ofFloat(view, "scaleX", 0.9f, 1f);
-            ObjectAnimator animY = ObjectAnimator.ofFloat(view, "scaleY", 0.9f, 1f);
-            ObjectAnimator fadeAnim = ObjectAnimator.ofFloat( view, "alpha", 0f, 1f );
-            AnimatorSet animSetXY = new AnimatorSet();
-            animSetXY.playTogether(animX, animY, fadeAnim);
-            animSetXY.setDuration( 1500 );
-            animSetXY.start();
-        }
-    };
-
-    ViewPropertyAnimation.Animator animationWave = new ViewPropertyAnimation.Animator() {
-        @Override
-        public void animate(View view) {
-            view.setAlpha(0f);
-            view.setPivotY(view.getMeasuredHeight());
-            ObjectAnimator animY = ObjectAnimator.ofFloat(view, "scaleY", 0f, 1f);
-            ObjectAnimator fadeAnim = ObjectAnimator.ofFloat( view, "alpha", 0f, 1f );
-            AnimatorSet animSetXY = new AnimatorSet();
-            animSetXY.playTogether(animY, fadeAnim);
-            animSetXY.setDuration( 1500 );
-            animSetXY.start();
-        }
-    };
-
-
     private GestureLibrary mLibrary;
     private boolean mIsPlaying = false;
     private JSONObject currSong;
-   // private AudioService mAudioService;
+    // private AudioService mAudioService;
     private final Handler mHideHandler = new Handler();
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -190,9 +148,8 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         mAnimationView.loop(true);
         mAnimationView.playAnimation();
 
-        mHandler.postDelayed(new Runnable(){
-            public void run(){
-                //do something
+        mHandler.postDelayed(new Runnable() {
+            public void run() {
                 changeGradient();
                 mHandler.postDelayed(this, mDelay);
             }
@@ -229,17 +186,17 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         if (predictions.size() > 0 && predictions.get(0).score > 0.8) {
             String result = predictions.get(0).name;
 
-            if ("play".equalsIgnoreCase(result) && !mIsPlaying) {
-                Toast.makeText(this, "WAIT FOR IT...", Toast.LENGTH_SHORT).show();
+            if (getString(R.string.gesture_play).equalsIgnoreCase(result) && !mIsPlaying) {
+                Toast.makeText(this, getString(R.string.wait_for_it), Toast.LENGTH_SHORT).show();
                 requestSong();
-            } else if ("stop".equalsIgnoreCase(result) && mIsPlaying) {
-                Toast.makeText(this, "FORVER GONE", Toast.LENGTH_LONG).show();
+            } else if (getString(R.string.gesture_stop).equalsIgnoreCase(result) && mIsPlaying) {
+                Toast.makeText(this, getString(R.string.forever_gone), Toast.LENGTH_LONG).show();
                 mIsPlaying = false;
                 stopStream();
                 clearSongInfo();
                 mWaveformView.setVisibility(View.GONE);
                 mAnimationView.setVisibility(View.VISIBLE);
-            } else if ("next".equalsIgnoreCase(result) && mIsPlaying) {
+            } else if (getString(R.string.gesture_next).equalsIgnoreCase(result) && mIsPlaying) {
                 requestSong();
                 stopStream();
             }
@@ -247,8 +204,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
     }
 
     @Override
-    public void onCompletion(MediaPlayer mp)
-    {
+    public void onCompletion(MediaPlayer mp) {
         requestSong();
     }
 
@@ -263,23 +219,21 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
 
             Glide.with(this)
                     .load(image.get("url"))
-                    .animate(animationObject)
+                    .animate(AnimationUtil.getImageAnimation())
                     .into(new GlideDrawableImageViewTarget(mSongCover) {
                         @Override
                         public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
                             super.onResourceReady(drawable, anim);
                             try {
-                                animationText.animate(mArtist);
+                                AnimationUtil.getTextAnimation().animate(mArtist);
                                 mArtist.setText(artist.get("name").toString());
-                                animationText.animate(mSongTitle);
+                                AnimationUtil.getTextAnimation().animate(mSongTitle);
                                 mSongTitle.setText(currSong.get("name").toString());
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            Log.d("hello", "Sometimes the image is not loaded and this text is not displayed");
                         }
                     });
-
 
 
         } catch (JSONException e) {
@@ -304,28 +258,27 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
             streamSong(res.get("preview_url").toString());
         } catch (JSONException e) {
             e.printStackTrace();
-            Toast.makeText(this, "SHIT, SOMETHING WENT WRONG. RETRYING.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.went_wrong), Toast.LENGTH_LONG).show();
             requestSong();
             return;
         }
+
         currSong = res;
         mIsPlaying = true;
         setSongInfo();
         mAnimationView.setVisibility(View.GONE);
     }
 
-    public void changeGradient() {
+    private void changeGradient() {
         GradientDrawable gd = new GradientDrawable();
-
         gd.setOrientation(GradientDrawable.Orientation.TL_BR);
         gd.setShape(GradientDrawable.RECTANGLE);
 
-        prevBlue = prevUp ? prevBlue+1 : prevBlue-1;
+        prevBlue = prevUp ? prevBlue + 1 : prevBlue - 1;
         if ((prevBlue < 100 && !prevUp) || (prevBlue > 200 && prevUp)) {
             prevUp = !prevUp;
         }
-
-        currBlue = currUp ? currBlue+1 : currBlue-1;
+        currBlue = currUp ? currBlue + 1 : currBlue - 1;
         if ((currBlue < 100 && !currUp) || (currBlue > 200 && currUp)) {
             currUp = !currUp;
         }
@@ -333,7 +286,6 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         gd.setColors(new int[]{
                 Color.argb(255, prevRed, prevGreen, prevBlue), Color.argb(255, currRed, currGreen, currBlue)
         });
-
         mMainLayout.setBackground(gd);
     }
 
@@ -368,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements GestureOverlayVie
         mVisualizer.setEnabled(true);
 
         mWaveformView.setVisibility(View.VISIBLE);
-        animationWave.animate(mWaveformView);
+        AnimationUtil.getAudioWaveAnimation().animate(mWaveformView);
     }
 
     @Override

@@ -1,10 +1,18 @@
 <resources>
-    <string name="app_name">onetime</string>
-
-    <string name="dummy_button">Dummy Button</string>
+    <string name="app_name">OneTime</string>
     <string name="play">►</string>
     <string name="stop">◼</string>
     <string name="artist">Artist</string>
     <string name="songTitle">Songtitle</string>
-    <string name="author">jazzy | by Yannick Pulver</string>
+    <string name="author">OneTime | by Yannick Pulver</string>
+
+
+    <string name="went_wrong">SHIT, SOMETHING WENT WRONG. RETRYING.</string>
+    <string name="forever_gone">FORVER GONE</string>
+    <string name="wait_for_it">WAIT FOR IT…</string>
+
+
+    <string name="gesture_play">play</string>
+    <string name="gesture_stop">stop</string>
+    <string name="gesture_next">next</string>
 </resources>
