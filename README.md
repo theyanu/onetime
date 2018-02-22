@@ -1,5 +1,5 @@
 # OneTime
-OneTime is an Android application that uses the Spotify API to randomly play a song from the Jazz genre or that contains the word Jazz. After 30 seconds of playing, it will switch to the next song. As the change that a song will be played twice is very low, I named it "OneTime".
+OneTime is an Android application that uses the Spotify API to randomly play a song from the Jazz genre or that contains the word Jazz. After 30 seconds of playing, it will switch to the next song. As the chance that a song will be played twice is very low, I named it "OneTime".
 
 To start the player, draw a play-icon shaped gesture on the app screen. After that, the player should start asap (depending on your network connection). To stop, draw a stop-icon shaped gesture.
 
