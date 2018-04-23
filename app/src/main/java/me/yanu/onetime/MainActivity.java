@@ -31,7 +31,6 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.animation.ViewPropertyAnimation;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
 
 import org.json.JSONArray;
