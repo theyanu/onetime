@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/meco_onetime.iml" filepath="$PROJECT_DIR$/meco_onetime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/onetime.iml" filepath="$PROJECT_DIR$/onetime.iml" />
     </modules>
   </component>
 </project>

@@ -44,294 +44,294 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements GestureOverlayView.OnGesturePerformedListener, MediaPlayer.OnCompletionListener, IAsyncResponse, Visualizer.OnDataCaptureListener {
-    private static final int UI_ANIMATION_DELAY = 300;
-    private static final int CAPTURE_SIZE = 256;
+public class MainActivity extends AppCompatActivity
+    implements GestureOverlayView.OnGesturePerformedListener, MediaPlayer.OnCompletionListener,
+    IAsyncResponse, Visualizer.OnDataCaptureListener {
+  private static final int UI_ANIMATION_DELAY = 300;
+  private static final int CAPTURE_SIZE = 256;
 
-    //Binding View properies with Butterknife
-    @BindView(R.id.artist)
-    TextView mArtist;
-    @BindView(R.id.songTitle)
-    TextView mSongTitle;
-    @BindView(R.id.songCover)
-    ImageView mSongCover;
-    @BindView(R.id.innerLayout)
-    RelativeLayout mContentView;
-    @BindView(R.id.mainLayout)
-    RelativeLayout mMainLayout;
-    @BindView(R.id.animation_view)
-    LottieAnimationView mAnimationView;
-    @BindView(R.id.waveform_view)
-    WaveformView mWaveformView;
+  //Binding View properies with Butterknife
+  @BindView(R.id.artist) TextView mArtist;
+  @BindView(R.id.songTitle) TextView mSongTitle;
+  @BindView(R.id.songCover) ImageView mSongCover;
+  @BindView(R.id.innerLayout) RelativeLayout mContentView;
+  @BindView(R.id.mainLayout) RelativeLayout mMainLayout;
+  @BindView(R.id.animation_view) LottieAnimationView mAnimationView;
+  @BindView(R.id.waveform_view) WaveformView mWaveformView;
 
-    private MediaPlayer mPlayer;
-    private ConnectionService mConnectionService;
+  private MediaPlayer mPlayer;
+  private ConnectionService mConnectionService;
+  private String accessToken;
 
-    private int prevRed = 230, prevGreen = 124, prevBlue = 178;
-    private int currRed = 245, currGreen = 228, currBlue = 94;
-    private boolean currUp, prevUp;
+  private int prevRed = 230, prevGreen = 124, prevBlue = 178;
+  private int currRed = 245, currGreen = 228, currBlue = 94;
+  private boolean currUp, prevUp;
 
-    Handler mHandler = new Handler();
-    int mDelay = 60;
+  Handler mHandler = new Handler();
+  int mDelay = 60;
 
-    private GestureLibrary mLibrary;
-    private boolean mIsPlaying = false;
-    private JSONObject currSong;
-    // private AudioService mAudioService;
-    private final Handler mHideHandler = new Handler();
-    private final Runnable mHidePart2Runnable = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        }
-    };
-    private final Runnable mShowPart2Runnable = new Runnable() {
-        @Override
-        public void run() {
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.show();
-            }
-        }
-    };
-    private final Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            hide();
-        }
-    };
+  private GestureLibrary mLibrary;
+  private boolean mIsPlaying = false;
+  private JSONObject currSong;
+  // private AudioService mAudioService;
+  private final Handler mHideHandler = new Handler();
+  private final Runnable mHidePart2Runnable = new Runnable() {
+    @SuppressLint("InlinedApi") @Override public void run() {
+      mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+          | View.SYSTEM_UI_FLAG_FULLSCREEN
+          | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+          | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+          | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+          | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    }
+  };
+  private final Runnable mShowPart2Runnable = new Runnable() {
+    @Override public void run() {
+      ActionBar actionBar = getSupportActionBar();
+      if (actionBar != null) {
+        actionBar.show();
+      }
+    }
+  };
+  private final Runnable mHideRunnable = new Runnable() {
+    @Override public void run() {
+      hide();
+    }
+  };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+  @Override protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    ButterKnife.bind(this);
 
-        RendererFactory rendererFactory = new RendererFactory();
-        mWaveformView.setRenderer(rendererFactory.createSimpleWaveformRenderer(Color.WHITE));
+    RendererFactory rendererFactory = new RendererFactory();
+    mWaveformView.setRenderer(rendererFactory.createSimpleWaveformRenderer(Color.WHITE));
 
-        clearSongInfo();
+    clearSongInfo();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1239);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, 1240);
-        }
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.MODIFY_AUDIO_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS}, 1241);
-        }
-
-        mContentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hide();
-            }
-        });
-
-        //Gestures
-        mLibrary = GestureLibraries.fromRawResource(this, R.raw.gesture);
-        if (!mLibrary.load()) finish();
-        GestureOverlayView gestures = (GestureOverlayView) findViewById(R.id.gestureOverlay);
-        gestures.addOnGesturePerformedListener(this);
-
-
-        //Fanciness
-        mAnimationView.setAnimation("data.json");
-        mAnimationView.loop(true);
-        mAnimationView.playAnimation();
-
-        mHandler.postDelayed(new Runnable() {
-            public void run() {
-                changeGradient();
-                mHandler.postDelayed(this, mDelay);
-            }
-        }, mDelay);
-
-        mConnectionService = new ConnectionService();
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.RECORD_AUDIO },
+          1239);
     }
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        delayedHide(100);
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
+        != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.INTERNET }, 1240);
     }
 
-    private void hide() {
-        // Hide UI first
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
-        mHideHandler.removeCallbacks(mShowPart2Runnable);
-        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.MODIFY_AUDIO_SETTINGS)
+        != PackageManager.PERMISSION_GRANTED) {
+      ActivityCompat.requestPermissions(this,
+          new String[] { Manifest.permission.MODIFY_AUDIO_SETTINGS }, 1241);
     }
 
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    mContentView.setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View view) {
+        hide();
+      }
+    });
+
+    //Gestures
+    mLibrary = GestureLibraries.fromRawResource(this, R.raw.gesture);
+    if (!mLibrary.load()) finish();
+    GestureOverlayView gestures = (GestureOverlayView) findViewById(R.id.gestureOverlay);
+    gestures.addOnGesturePerformedListener(this);
+
+    //Fanciness
+    mAnimationView.setAnimation("data.json");
+    mAnimationView.loop(true);
+    mAnimationView.playAnimation();
+
+    mHandler.postDelayed(new Runnable() {
+      public void run() {
+        changeGradient();
+        mHandler.postDelayed(this, mDelay);
+      }
+    }, mDelay);
+
+    mConnectionService = new ConnectionService();
+    mConnectionService.getAccessToken(this);
+  }
+
+  @Override protected void onPostCreate(Bundle savedInstanceState) {
+    super.onPostCreate(savedInstanceState);
+    delayedHide(100);
+  }
+
+  private void hide() {
+    // Hide UI first
+    ActionBar actionBar = getSupportActionBar();
+    if (actionBar != null) {
+      actionBar.hide();
     }
+    mHideHandler.removeCallbacks(mShowPart2Runnable);
+    mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
+  }
 
-    @Override
-    public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
-        ArrayList<Prediction> predictions = mLibrary.recognize(gesture);
+  private void delayedHide(int delayMillis) {
+    mHideHandler.removeCallbacks(mHideRunnable);
+    mHideHandler.postDelayed(mHideRunnable, delayMillis);
+  }
 
-        if (predictions.size() > 0 && predictions.get(0).score > 0.8) {
-            String result = predictions.get(0).name;
+  @Override public void onGesturePerformed(GestureOverlayView overlay, Gesture gesture) {
+    ArrayList<Prediction> predictions = mLibrary.recognize(gesture);
 
-            if (getString(R.string.gesture_play).equalsIgnoreCase(result) && !mIsPlaying) {
-                Toast.makeText(this, getString(R.string.wait_for_it), Toast.LENGTH_SHORT).show();
-                requestSong();
-            } else if (getString(R.string.gesture_stop).equalsIgnoreCase(result) && mIsPlaying) {
-                Toast.makeText(this, getString(R.string.forever_gone), Toast.LENGTH_LONG).show();
-                mIsPlaying = false;
-                stopStream();
-                clearSongInfo();
-                mWaveformView.setVisibility(View.GONE);
-                mAnimationView.setVisibility(View.VISIBLE);
-            } else if (getString(R.string.gesture_next).equalsIgnoreCase(result) && mIsPlaying) {
-                requestSong();
-                stopStream();
-            }
-        }
-    }
+    if (predictions.size() > 0 && predictions.get(0).score > 0.8) {
+      String result = predictions.get(0).name;
 
-    @Override
-    public void onCompletion(MediaPlayer mp) {
+      if (getString(R.string.gesture_play).equalsIgnoreCase(result) && !mIsPlaying) {
+        Toast.makeText(this, getString(R.string.wait_for_it), Toast.LENGTH_SHORT).show();
         requestSong();
+      } else if (getString(R.string.gesture_stop).equalsIgnoreCase(result) && mIsPlaying) {
+        Toast.makeText(this, getString(R.string.forever_gone), Toast.LENGTH_LONG).show();
+        mIsPlaying = false;
+        stopStream();
+        clearSongInfo();
+        mWaveformView.setVisibility(View.GONE);
+        mAnimationView.setVisibility(View.VISIBLE);
+      } else if (getString(R.string.gesture_next).equalsIgnoreCase(result) && mIsPlaying) {
+        requestSong();
+        stopStream();
+      }
+    }
+  }
+
+  @Override public void onCompletion(MediaPlayer mp) {
+    requestSong();
+  }
+
+  private void setSongInfo() {
+    try {
+      JSONArray artists = (JSONArray) currSong.get("artists");
+      final JSONObject artist = (JSONObject) artists.get(0);
+
+      JSONObject album = (JSONObject) currSong.get("album");
+      JSONArray images = (JSONArray) album.get("images");
+      JSONObject image = (JSONObject) images.get(0);
+
+      Glide.with(this)
+          .load(image.get("url"))
+          .animate(AnimationUtil.getImageAnimation())
+          .into(new GlideDrawableImageViewTarget(mSongCover) {
+            @Override public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
+              super.onResourceReady(drawable, anim);
+              try {
+                AnimationUtil.getTextAnimation().animate(mArtist);
+                mArtist.setText(artist.get("name").toString());
+                AnimationUtil.getTextAnimation().animate(mSongTitle);
+                mSongTitle.setText(currSong.get("name").toString());
+              } catch (JSONException e) {
+                e.printStackTrace();
+              }
+            }
+          });
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void clearSongInfo() {
+    mArtist.setText("");
+    mSongTitle.setText("");
+    mSongCover.setImageResource(0);
+  }
+
+  @Override public void processFinish(String output) {
+    JSONObject json, res;
+
+    try {
+      json = new JSONObject(output);
+      String tempAccessToken = json.get("access_token").toString();
+      if (tempAccessToken != "") {
+        accessToken = tempAccessToken;
+      }
+      return;
+    } catch (JSONException ignored) {
+
     }
 
-    private void setSongInfo() {
-        try {
-            JSONArray artists = (JSONArray) currSong.get("artists");
-            final JSONObject artist = (JSONObject) artists.get(0);
-
-            JSONObject album = (JSONObject) currSong.get("album");
-            JSONArray images = (JSONArray) album.get("images");
-            JSONObject image = (JSONObject) images.get(0);
-
-            Glide.with(this)
-                    .load(image.get("url"))
-                    .animate(AnimationUtil.getImageAnimation())
-                    .into(new GlideDrawableImageViewTarget(mSongCover) {
-                        @Override
-                        public void onResourceReady(GlideDrawable drawable, GlideAnimation anim) {
-                            super.onResourceReady(drawable, anim);
-                            try {
-                                AnimationUtil.getTextAnimation().animate(mArtist);
-                                mArtist.setText(artist.get("name").toString());
-                                AnimationUtil.getTextAnimation().animate(mSongTitle);
-                                mSongTitle.setText(currSong.get("name").toString());
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    try {
+      json = new JSONObject(output);
+      JSONObject tracks = (JSONObject) json.get("tracks");
+      JSONArray items = (JSONArray) tracks.get("items");
+      res = (JSONObject) items.get(0);
+      streamSong(res.get("preview_url").toString());
+    } catch (JSONException e) {
+      e.printStackTrace();
+      Toast.makeText(this, getString(R.string.went_wrong), Toast.LENGTH_LONG).show();
+      requestSong();
+      return;
     }
 
-    private void clearSongInfo() {
-        mArtist.setText("");
-        mSongTitle.setText("");
-        mSongCover.setImageResource(0);
+    currSong = res;
+    mIsPlaying = true;
+    setSongInfo();
+    mAnimationView.setVisibility(View.GONE);
+  }
+
+  private void changeGradient() {
+    GradientDrawable gd = new GradientDrawable();
+    gd.setOrientation(GradientDrawable.Orientation.TL_BR);
+    gd.setShape(GradientDrawable.RECTANGLE);
+
+    prevBlue = prevUp ? prevBlue + 1 : prevBlue - 1;
+    if ((prevBlue < 100 && !prevUp) || (prevBlue > 200 && prevUp)) {
+      prevUp = !prevUp;
+    }
+    currBlue = currUp ? currBlue + 1 : currBlue - 1;
+    if ((currBlue < 100 && !currUp) || (currBlue > 200 && currUp)) {
+      currUp = !currUp;
     }
 
-    @Override
-    public void processFinish(String output) {
-        JSONObject json, res;
-        try {
-            json = new JSONObject(output);
-            JSONObject tracks = (JSONObject) json.get("tracks");
-            JSONArray items = (JSONArray) tracks.get("items");
-            res = (JSONObject) items.get(0);
-            streamSong(res.get("preview_url").toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-            Toast.makeText(this, getString(R.string.went_wrong), Toast.LENGTH_LONG).show();
-            requestSong();
-            return;
-        }
+    gd.setColors(new int[] {
+        Color.argb(255, prevRed, prevGreen, prevBlue), Color.argb(255, currRed, currGreen, currBlue)
+    });
+    mMainLayout.setBackground(gd);
+  }
 
-        currSong = res;
-        mIsPlaying = true;
-        setSongInfo();
-        mAnimationView.setVisibility(View.GONE);
+  void requestSong() {
+    mConnectionService.getSpotifySong(this, accessToken);
+  }
+
+  void stopStream() {
+    mPlayer.stop();
+  }
+
+  boolean streamSong(String url) {
+    mPlayer = new MediaPlayer();
+    mPlayer.setOnCompletionListener(this);
+    mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    try {
+      mPlayer.setDataSource(url);
+      mPlayer.prepare();
+      startVisualiser();
+      mPlayer.start();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
     }
+    return true;
+  }
 
-    private void changeGradient() {
-        GradientDrawable gd = new GradientDrawable();
-        gd.setOrientation(GradientDrawable.Orientation.TL_BR);
-        gd.setShape(GradientDrawable.RECTANGLE);
+  private void startVisualiser() {
+    Visualizer mVisualizer = new Visualizer(mPlayer.getAudioSessionId());
+    mVisualizer.setDataCaptureListener(this, Visualizer.getMaxCaptureRate(), true, false);
+    mVisualizer.setCaptureSize(CAPTURE_SIZE);
+    mVisualizer.setEnabled(true);
 
-        prevBlue = prevUp ? prevBlue + 1 : prevBlue - 1;
-        if ((prevBlue < 100 && !prevUp) || (prevBlue > 200 && prevUp)) {
-            prevUp = !prevUp;
-        }
-        currBlue = currUp ? currBlue + 1 : currBlue - 1;
-        if ((currBlue < 100 && !currUp) || (currBlue > 200 && currUp)) {
-            currUp = !currUp;
-        }
+    mWaveformView.setVisibility(View.VISIBLE);
+    AnimationUtil.getAudioWaveAnimation().animate(mWaveformView);
+  }
 
-        gd.setColors(new int[]{
-                Color.argb(255, prevRed, prevGreen, prevBlue), Color.argb(255, currRed, currGreen, currBlue)
-        });
-        mMainLayout.setBackground(gd);
+  @Override
+  public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
+    if (mWaveformView != null) {
+      mWaveformView.setWaveform(waveform);
     }
+  }
 
-    void requestSong() {
-        mConnectionService.getSpotifySong(this);
-    }
-
-    void stopStream() {
-        mPlayer.stop();
-    }
-
-    boolean streamSong(String url) {
-        mPlayer = new MediaPlayer();
-        mPlayer.setOnCompletionListener(this);
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            mPlayer.setDataSource(url);
-            mPlayer.prepare();
-            startVisualiser();
-            mPlayer.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    private void startVisualiser() {
-        Visualizer mVisualizer = new Visualizer(mPlayer.getAudioSessionId());
-        mVisualizer.setDataCaptureListener(this, Visualizer.getMaxCaptureRate(), true, false);
-        mVisualizer.setCaptureSize(CAPTURE_SIZE);
-        mVisualizer.setEnabled(true);
-
-        mWaveformView.setVisibility(View.VISIBLE);
-        AnimationUtil.getAudioWaveAnimation().animate(mWaveformView);
-    }
-
-    @Override
-    public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-        if (mWaveformView != null) {
-            mWaveformView.setWaveform(waveform);
-        }
-    }
-
-    @Override
-    public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
-        //Nothing to do here.
-    }
+  @Override public void onFftDataCapture(Visualizer visualizer, byte[] fft, int samplingRate) {
+    //Nothing to do here.
+  }
 }
